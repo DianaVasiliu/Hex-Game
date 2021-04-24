@@ -12,4 +12,5 @@ def drawBoard(display, game):
     display.fill(game.backgroundColor)
     for tile in game.hexTiles():
         drawTile(display, game, tile)
+    game.showText()
     pygame.display.flip()

@@ -15,7 +15,10 @@ def game_loop(game):
 
 if __name__ == '__main__':
     pygame.init()
+    icon = pygame.image.load('hex.png')
     pygame.display.set_caption("Hex Game © Gunterina")
+    pygame.display.set_icon(icon)
+
     hexgame = Game()
     display = pygame.display.set_mode(size=hexgame.screenSize)
 
@@ -23,5 +26,10 @@ if __name__ == '__main__':
 
     Game.JMIN, algorithm, difficulty = helper.homePage(hexgame, display)
     Game.JMAX = 'red' if Game.JMIN == 'blue' else 'blue'
+
+    print('Start')
+    hexgame.showMatrix()
+
+    print(hexgame.text)
 
     game_loop(hexgame)

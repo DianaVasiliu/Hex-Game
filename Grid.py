@@ -7,3 +7,4 @@ class Grid:
         self.height = height
         self.width = width
         self.tiles = {(x, y): Tile(x, y, tileSize) for x in range(width) for y in range(height)}
+        self.visitedTiles = {(x, y): 0 for x in range(width) for y in range(height)}

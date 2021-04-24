@@ -29,3 +29,11 @@ class Tile:
         radius = self.height // 2
         position_px = self.centerPoint(offset)
         return [helper.cornerPoint(radius, i, position_px) for i in range(6)]
+
+    def distanceSq(self, position, offset):
+        p1 = self.centerPoint(offset)
+        p2 = position
+        x1, y1 = p1
+        x2, y2 = p2
+        dx, dy = x1 - x2, y2 - y1
+        return dx * dx + dy * dy
