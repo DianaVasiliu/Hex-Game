@@ -4,7 +4,7 @@ import pygame.font
 class Button:
 
     def __init__(self, display=None, top=0, left=0, w=0, h=0,
-                 bgColor=(255, 204, 153), selectedBgColor=(255, 128, 0),
+                 bgColor=(204, 255, 255), selectedBgColor=(0, 204, 204),
                  text='', font='arial', fontDimension=36,
                  textColor=(0, 0, 0), value=''):
         self.display = display
