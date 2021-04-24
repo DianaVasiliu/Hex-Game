@@ -13,4 +13,15 @@ def drawBoard(display, game):
     for tile in game.hexTiles():
         drawTile(display, game, tile)
     game.showText()
+
+    if game.solution is not None:
+        drawPath(display, game)
+
     pygame.display.flip()
+
+
+def drawPath(display, game):
+    path = game.solution
+
+    for tile in path:
+        pygame.draw.polygon(display, (0, 0, 0), tile.cornerPoints(game.boardPosition), 8)

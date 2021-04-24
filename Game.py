@@ -22,6 +22,8 @@ class Game:
             self.tileSize
         )
 
+        self.emptyTiles = self.NUM_ROWS * self.NUM_COLS
+
         # colours
         self.emptyColour = (70, 70, 70)
         self.playerColours = {
@@ -35,6 +37,7 @@ class Game:
         self.matrix = [[self.__class__.EMPTY for _ in range(self.NUM_COLS)] for _ in range(self.NUM_ROWS)]
         self.currentPlayer = 'red'
         self.text = 'Red\'s turn'
+        self.solution = None
 
     @classmethod
     def initialiseGame(cls, display, game):
@@ -74,11 +77,21 @@ class Game:
     def makeMove(self):
         tile = self.getNearestTile(pygame.mouse.get_pos())
         tile.colour = self.playerColours[self.currentPlayer]
+
         x, y = tile.gridPosition
         self.matrix[y][x] = self.currentPlayer[0].upper()
         self.grid.visitedTiles[tile.gridPosition] = 1
+        self.emptyTiles -= 1
+
         otherPlayer = self.otherPlayer(self.currentPlayer)
         self.text = otherPlayer.capitalize() + '\'s turn'
+        self.solution = self.findSolution()
+
+        if self.solution is not None:
+            self.text = 'Game over! ' + self.currentPlayer.capitalize() + ' wins!'
+        elif self.solution is None and self.emptyTiles == 0:
+            self.text = 'Game over! It\'s a tie!'
+
         return x, y
 
     def getNearestTile(self, pos):
@@ -93,5 +106,35 @@ class Game:
         return nearestTile
 
     def isValidMove(self):
+        if self.gameOver():
+            return False
         tile = self.getNearestTile(pygame.mouse.get_pos())
         return self.grid.visitedTiles[tile.gridPosition] == 0
+
+    def gameOver(self):
+        return self.solution is not None
+
+    def findSolution(self):
+        for tile in self.grid.topRow():
+            if tile.colour == self.playerColours['red']:
+                path = self.grid.findPath(
+                    tile,
+                    self.grid.bottomRow(),
+                    self.playerColours['red']
+                )
+
+                if path is not None:
+                    return path
+
+        for tile in self.grid.leftColumn():
+            if tile.colour == self.playerColours['blue']:
+                path = self.grid.findPath(
+                    tile,
+                    self.grid.rightColumn(),
+                    self.playerColours['blue']
+                )
+
+                if path is not None:
+                    return path
+
+        return None
