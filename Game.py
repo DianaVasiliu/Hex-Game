@@ -1,3 +1,4 @@
+import copy
 import sys
 import pygame.mouse
 from Grid import Grid
@@ -7,8 +8,9 @@ class Game:
     JMIN = None
     JMAX = None
     EMPTY = '.'
+    MAX_DEPTH = 1
 
-    def __init__(self):
+    def __init__(self, matrix=None):
         self.backgroundColor = (0, 0, 0)
         self.screenSize = (1280, 720)
         self.boardPosition = (250, 80)
@@ -34,8 +36,7 @@ class Game:
         for tile in self.hexTiles():
             tile.colour = self.emptyColour
 
-        self.matrix = [[self.__class__.EMPTY for _ in range(self.NUM_COLS)] for _ in range(self.NUM_ROWS)]
-        self.currentPlayer = 'red'
+        self.matrix = matrix or [[self.__class__.EMPTY for _ in range(self.NUM_COLS)] for _ in range(self.NUM_ROWS)]
         self.text = 'Red\'s turn'
         self.solution = None
 
@@ -74,21 +75,21 @@ class Game:
         pygame.draw.rect(self.display, (0, 0, 0), rectangle)
         self.display.blit(renderedText, rectangleText)
 
-    def makeMove(self):
+    def makeMove(self, player):
         tile = self.getNearestTile(pygame.mouse.get_pos())
-        tile.colour = self.playerColours[self.currentPlayer]
+        tile.colour = self.playerColours[player]
 
         x, y = tile.gridPosition
-        self.matrix[y][x] = self.currentPlayer[0].upper()
+        self.matrix[y][x] = player[0].upper()
         self.grid.visitedTiles[tile.gridPosition] = 1
         self.emptyTiles -= 1
 
-        otherPlayer = self.otherPlayer(self.currentPlayer)
+        otherPlayer = self.otherPlayer(player)
         self.text = otherPlayer.capitalize() + '\'s turn'
         self.solution = self.findSolution()
 
         if self.solution is not None:
-            self.text = 'Game over! ' + self.currentPlayer.capitalize() + ' wins!'
+            self.text = 'Game over! {} wins!'.format(player.capitalize())
         elif self.solution is None and self.emptyTiles == 0:
             self.text = 'Game over! It\'s a tie!'
 
@@ -105,13 +106,32 @@ class Game:
                 nearestTile = tile
         return nearestTile
 
+    def nextMoves(self, player):
+        moves = []
+        for i in range(self.NUM_ROWS):
+            for j in range(self.NUM_COLS):
+                if self.matrix[i][j] == self.EMPTY:
+                    newMatrix = copy.deepcopy(self.matrix)
+                    newMatrix[i][j] = player[0].upper()
+                    newGame = Game(newMatrix)
+                    newGame.currentPlayer = self.otherPlayer(player)
+                    newGame.text = newGame.currentPlayer.capitalize() + '\'s turn'
+                    moves.append(newGame)
+        return moves
+
     def isValidMove(self):
         if self.gameOver():
             return False
         tile = self.getNearestTile(pygame.mouse.get_pos())
-        return self.grid.visitedTiles[tile.gridPosition] == 0
+        return self.matrix[tile.gridPosition[1]][tile.gridPosition[0]] == self.EMPTY
+
+    def estimateScore(self, depth):
+        # TODO
+        return depth
 
     def gameOver(self):
+        if self.solution is None:
+            self.findSolution()
         return self.solution is not None
 
     def findSolution(self):
@@ -138,3 +158,27 @@ class Game:
                     return path
 
         return None
+
+    # drawing methods
+    def drawTile(self, tile):
+        corners = tile.cornerPoints(self.boardPosition)
+        pygame.draw.polygon(self.display, tile.colour, corners)
+        pygame.draw.polygon(self.display, (50, 50, 50), corners, 8)
+        pygame.draw.polygon(self.display, (255, 255, 255), corners, 3)
+
+    def drawBoard(self):
+        self.display.fill(self.backgroundColor)
+        for tile in self.hexTiles():
+            self.drawTile(tile)
+        self.showText()
+
+        if self.solution is not None:
+            self.drawPath()
+
+        pygame.display.flip()
+
+    def drawPath(self):
+        path = self.solution
+
+        for tile in path:
+            pygame.draw.polygon(self.display, (0, 0, 0), tile.cornerPoints(self.boardPosition), 8)
