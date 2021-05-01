@@ -15,7 +15,7 @@ class Tile:
     def __repr__(self):
         return f'HexTile{self.gridPosition}'
 
-    def centerPoint(self, offset=0):
+    def centerPoint(self, offset=(0, 0)):
         x, y = self.gridPosition
         dx, dy = offset
         height = math.floor(self.height * 3 / 4)
@@ -25,7 +25,7 @@ class Tile:
         x += y // 2
         return x * self.width + dx, y * height + dy
 
-    def cornerPoints(self, offset=0):
+    def cornerPoints(self, offset=(0, 0)):
         radius = self.height // 2
         position_px = self.centerPoint(offset)
         return [helper.cornerPoint(radius, i, position_px) for i in range(6)]

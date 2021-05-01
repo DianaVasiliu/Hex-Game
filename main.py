@@ -36,14 +36,21 @@ if __name__ == '__main__':
 
     currentState = State(hexgame, 'red', hexgame.MAX_DEPTH)
 
+    startTime = int(round(time.time() * 1000))
     while True:
 
         if currentState.currentPlayer == Game.JMIN:
+            hexgame.drawBoard()
             events = pygame.event.get()
-            gameevents.handleEvents(events, hexgame, currentState)
+            doneTurn = gameevents.handleEvents(events, hexgame, currentState)
+            if doneTurn:
+                endTime = int(round(time.time() * 1000))
+                print('Player has thought for {} miliseconds'.format(endTime - startTime))
+                print()
+                print(hexgame.text)
+        else:
             hexgame.drawBoard()
 
-        else:
             startTime = int(round(time.time() * 1000))
 
             currentState.board.matrix = copy.deepcopy(hexgame.matrix)
@@ -79,3 +86,4 @@ if __name__ == '__main__':
             print(hexgame.text)
 
             currentState.currentPlayer = Game.otherPlayer(currentState.currentPlayer)
+            startTime = int(round(time.time() * 1000))

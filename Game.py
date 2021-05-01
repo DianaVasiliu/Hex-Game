@@ -163,7 +163,7 @@ class Game:
     def drawTile(self, tile):
         corners = tile.cornerPoints(self.boardPosition)
         pygame.draw.polygon(self.display, tile.colour, corners)
-        pygame.draw.polygon(self.display, (50, 50, 50), corners, 8)
+        pygame.draw.polygon(self.display, (50, 50, 50), corners, 5)
         pygame.draw.polygon(self.display, (255, 255, 255), corners, 3)
 
     def drawBoard(self):
@@ -175,10 +175,32 @@ class Game:
         if self.solution is not None:
             self.drawPath()
 
+        self.drawBorder()
+
         pygame.display.flip()
 
     def drawPath(self):
         path = self.solution
 
         for tile in path:
-            pygame.draw.polygon(self.display, (0, 0, 0), tile.cornerPoints(self.boardPosition), 8)
+            pygame.draw.polygon(self.display, color=(0, 0, 0), points=tile.cornerPoints(self.boardPosition), width=7)
+
+    def drawBorder(self):
+        colours = list(self.playerColours.values())
+        colour1 = colours[0]
+        colour2 = colours[1]
+        width = 4
+
+        self.drawOneSideBorder(colour1, self.grid.topRow(), 3, 6, width)
+        self.drawOneSideBorder(colour1, self.grid.bottomRow(), 0, 3, width)
+        self.drawOneSideBorder(colour2, self.grid.leftColumn(), 1, 4, width)
+        self.drawOneSideBorder(colour2, self.grid.rightColumn(), 4, 1, width)
+
+    def drawOneSideBorder(self, colour, row, fromPoint, toPoint, width):
+        for tile in row:
+            corners = tile.cornerPoints(self.boardPosition)
+            if fromPoint >= toPoint:
+                corners = corners[fromPoint:] + corners[:toPoint]
+            else:
+                corners = corners[fromPoint:toPoint]
+            pygame.draw.lines(self.display, color=colour, points=corners, width=width, closed=False)

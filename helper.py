@@ -9,7 +9,7 @@ algButtonWidth = 170
 playerButtonWidth = 100
 startButtonWidth = 110
 difficultyButtonWidth = 200
-topMargin = 50
+topMargin = 30
 
 
 def homePage(game, display):
