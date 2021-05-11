@@ -46,6 +46,8 @@ def homePage(game, display):
         ],
         selected=0
     )
+    # TODO:
+    # button group for the type of play: player vs player / player vs computer
     start = Button(display=display,
                    top=4*topMargin + 3*buttonHeight,
                    left=game.screenSize[0] / 2 - startButtonWidth / 2 + 35,

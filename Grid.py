@@ -15,19 +15,18 @@ class Grid:
     def findNeighbours(self, tile):
         x, y = tile.gridPosition
 
+        if x > 0 and y < self.height - 1:
+            tile.neighbours.append(self.tiles[(x - 1, y + 1)])
+        if y < self.height - 1:
+            tile.neighbours.append(self.tiles[(x, y + 1)])
         if x > 0:
             tile.neighbours.append(self.tiles[(x - 1, y)])
         if x < self.width - 1:
             tile.neighbours.append(self.tiles[(x + 1, y)])
         if y > 0:
             tile.neighbours.append(self.tiles[(x, y - 1)])
-        if y < self.height - 1:
-            tile.neighbours.append(self.tiles[(x, y + 1)])
-
         if x < self.width - 1 and y > 0:
             tile.neighbours.append(self.tiles[(x + 1, y - 1)])
-        if x > 0 and y < self.height - 1:
-            tile.neighbours.append(self.tiles[(x - 1, y + 1)])
 
     def topRow(self):
         return [self.tiles[(x, 0)] for x in range(self.width)]

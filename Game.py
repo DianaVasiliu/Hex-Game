@@ -9,6 +9,10 @@ class Game:
     JMAX = None
     EMPTY = '.'
     MAX_DEPTH = 1
+    topTile = None
+    bottomTile = None
+    rightTile = None
+    leftTile = None
 
     def __init__(self, matrix=None):
         self.backgroundColor = (0, 0, 0)
@@ -69,7 +73,7 @@ class Game:
         width = 400
         height = 100
         left = self.screenSize[0] / 2 - width / 2
-        top = self.screenSize[1] - 1.3*height
+        top = self.screenSize[1] - 1.3 * height
         rectangle = pygame.Rect(left, top, width, height)
         rectangleText = renderedText.get_rect(center=rectangle.center)
         pygame.draw.rect(self.display, (0, 0, 0), rectangle)
@@ -93,6 +97,30 @@ class Game:
         elif self.solution is None and self.emptyTiles == 0:
             self.text = 'Game over! It\'s a tie!'
 
+        if player == 'red':
+            if self.topTile is None:
+                self.topTile = tile.gridPosition
+            else:
+                if tile.gridPosition[0] < self.topTile[0]:
+                    self.topTile = tile.gridPosition
+
+            if self.bottomTile is None:
+                self.bottomTile = tile.gridPosition
+            else:
+                if tile.gridPosition[0] > self.bottomTile[0]:
+                    self.bottomTile = tile.gridPosition
+        elif player == 'blue':
+            if self.leftTile is None:
+                self.leftTile = tile.gridPosition
+            else:
+                if tile.gridPosition[1] < self.leftTile[1]:
+                    self.leftTile = tile.gridPosition
+
+            if self.rightTile is None:
+                self.rightTile = tile.gridPosition
+            else:
+                if tile.gridPosition[1] > self.rightTile[1]:
+                    self.rightTile = tile.gridPosition
         return x, y
 
     def getNearestTile(self, pos):
@@ -107,9 +135,19 @@ class Game:
         return nearestTile
 
     def nextMoves(self, player):
-        moves = []
+        # if the player can only move a tile adjacent to another tile
+        computerTiles = []
+        allTiles = self.grid.tiles
         for i in range(self.NUM_ROWS):
             for j in range(self.NUM_COLS):
+                if self.matrix[i][j] == self.JMAX[0].lower():
+                    computerTiles.append(allTiles[(j, i)])
+
+        moves = []
+        for computerTile in computerTiles:
+            neighbours = computerTile.neighbours
+            for n in neighbours:
+                j, i = n.gridPosition
                 if self.matrix[i][j] == self.EMPTY:
                     newMatrix = copy.deepcopy(self.matrix)
                     newMatrix[i][j] = player[0].upper()
@@ -117,17 +155,51 @@ class Game:
                     newGame.currentPlayer = self.otherPlayer(player)
                     newGame.text = newGame.currentPlayer.capitalize() + '\'s turn'
                     moves.append(newGame)
+
+        # if the players can move anywhere on the table
+        # moves = []
+        # for i in range(self.NUM_ROWS):
+        #     for j in range(self.NUM_COLS):
+        #         if self.matrix[i][j] == self.EMPTY:
+        #             newMatrix = copy.deepcopy(self.matrix)
+        #             newMatrix[i][j] = player[0].upper()
+        #             newGame = Game(newMatrix)
+        #             newGame.currentPlayer = self.otherPlayer(player)
+        #             newGame.text = newGame.currentPlayer.capitalize() + '\'s turn'
+        #             moves.append(newGame)
         return moves
 
     def isValidMove(self):
         if self.gameOver():
             return False
-        tile = self.getNearestTile(pygame.mouse.get_pos())
-        return self.matrix[tile.gridPosition[1]][tile.gridPosition[0]] == self.EMPTY
 
-    def estimateScore(self, depth):
-        # TODO
-        return depth
+        tile = self.getNearestTile(pygame.mouse.get_pos())
+        # the player can place a tile anywhere
+        # return self.matrix[tile.gridPosition[1]][tile.gridPosition[0]] == self.EMPTY
+
+        # the player can only place a tile next to another tile
+        allTiles = self.NUM_ROWS * self.NUM_COLS
+        if self.emptyTiles in [allTiles, allTiles - 1]:
+            return self.matrix[tile.gridPosition[1]][tile.gridPosition[0]] == self.EMPTY
+
+        ok = False
+        for neigh in tile.neighbours:
+            c, l = neigh.gridPosition
+            if self.matrix[l][c].lower() == self.JMIN[0]:
+                ok = True
+                break
+        if ok:
+            return self.matrix[tile.gridPosition[1]][tile.gridPosition[0]] == self.EMPTY
+        return False
+
+    def estimateScore(self):
+        return 0
+
+    def getComputerShortestPath(self):
+        return []
+
+    def getPlayerShortestPath(self):
+        return []
 
     def gameOver(self):
         if self.solution is None:
@@ -165,6 +237,11 @@ class Game:
         pygame.draw.polygon(self.display, tile.colour, corners)
         pygame.draw.polygon(self.display, (50, 50, 50), corners, 5)
         pygame.draw.polygon(self.display, (255, 255, 255), corners, 3)
+
+        if tile == self.getNearestTile(pygame.mouse.get_pos()):
+            if not self.gameOver():
+                pygame.draw.circle(self.display, color=self.playerColours[self.JMIN],
+                                   center=tile.centerPoint(self.boardPosition), radius=10)
 
     def drawBoard(self):
         self.display.fill(self.backgroundColor)

@@ -57,13 +57,13 @@ if __name__ == '__main__':
             if algorithm == 'minimax':
                 updatedState = alg.minimax(currentState)
             else:
-                pass
-                # updatedState = alg.alpha_beta(-500, 500, currentState)
+                updatedState = alg.alpha_beta(-500, 500, currentState)
 
             endTime = int(round(time.time() * 1000))
             print('Computer has thought for {} miliseconds'.format(endTime - startTime))
 
             currentState.board = updatedState.chosenState.board
+            hexgame.emptyTiles -= 1
 
             hexgame.matrix = copy.deepcopy(currentState.board.matrix)
             hexgame.showMatrix()
