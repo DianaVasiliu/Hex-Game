@@ -6,8 +6,8 @@ import copy
 
 def createPossibleMove(state):
     if not state.possibleMoves:
-        i = randint(0, state.board.NUM_ROWS)
-        j = randint(0, state.board.NUM_COLS)
+        i = randint(0, state.board.NUM_ROWS - 1)
+        j = randint(0, state.board.NUM_COLS - 1)
 
         newMatrix = copy.deepcopy(state.board.matrix)
         newMatrix[i][j] = state.board.JMAX[0].upper()

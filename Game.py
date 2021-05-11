@@ -98,29 +98,32 @@ class Game:
             self.text = 'Game over! It\'s a tie!'
 
         if player == 'red':
-            if self.topTile is None:
-                self.topTile = tile.gridPosition
+            print("old top tile", Game.topTile)
+            if Game.topTile is None:
+                Game.topTile = tile.gridPosition
             else:
-                if tile.gridPosition[0] < self.topTile[0]:
-                    self.topTile = tile.gridPosition
-
-            if self.bottomTile is None:
-                self.bottomTile = tile.gridPosition
+                if tile.gridPosition[1] < Game.topTile[1]:
+                    Game.topTile = tile.gridPosition
+            print("new top tile", Game.topTile)
+            
+            if Game.bottomTile is None:
+                Game.bottomTile = tile.gridPosition
             else:
-                if tile.gridPosition[0] > self.bottomTile[0]:
-                    self.bottomTile = tile.gridPosition
+                if tile.gridPosition[1] > Game.bottomTile[1]:
+                    Game.bottomTile = tile.gridPosition
         elif player == 'blue':
-            if self.leftTile is None:
-                self.leftTile = tile.gridPosition
+            if Game.leftTile is None:
+                Game.leftTile = tile.gridPosition
             else:
-                if tile.gridPosition[1] < self.leftTile[1]:
-                    self.leftTile = tile.gridPosition
+                if tile.gridPosition[0] < Game.leftTile[0]:
+                    Game.leftTile = tile.gridPosition
 
-            if self.rightTile is None:
-                self.rightTile = tile.gridPosition
+            if Game.rightTile is None:
+                Game.rightTile = tile.gridPosition
             else:
-                if tile.gridPosition[1] > self.rightTile[1]:
-                    self.rightTile = tile.gridPosition
+                if tile.gridPosition[0] > Game.rightTile[0]:
+                    Game.rightTile = tile.gridPosition
+
         return x, y
 
     def getNearestTile(self, pos):
@@ -192,7 +195,7 @@ class Game:
             return self.matrix[tile.gridPosition[1]][tile.gridPosition[0]] == self.EMPTY
         return False
 
-    def estimateScore(self):
+    def estimateScore(self, depth):
         return 0
 
     def getComputerShortestPath(self):
