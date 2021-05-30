@@ -2,6 +2,7 @@ import copy
 import sys
 import pygame.mouse
 from Grid import Grid
+from Button import Button
 
 
 class Game:
@@ -13,6 +14,8 @@ class Game:
     bottomTile = None
     rightTile = None
     leftTile = None
+    currentPlayer = None
+    running = True
 
     def __init__(self, matrix=None):
         self.backgroundColor = (0, 0, 0)
@@ -98,14 +101,12 @@ class Game:
             self.text = 'Game over! It\'s a tie!'
 
         if player == 'red':
-            print("old top tile", Game.topTile)
             if Game.topTile is None:
                 Game.topTile = tile.gridPosition
             else:
                 if tile.gridPosition[1] < Game.topTile[1]:
                     Game.topTile = tile.gridPosition
-            print("new top tile", Game.topTile)
-            
+
             if Game.bottomTile is None:
                 Game.bottomTile = tile.gridPosition
             else:
@@ -172,7 +173,7 @@ class Game:
         #             moves.append(newGame)
         return moves
 
-    def isValidMove(self):
+    def isValidMove(self, player):
         if self.gameOver():
             return False
 
@@ -188,7 +189,7 @@ class Game:
         ok = False
         for neigh in tile.neighbours:
             c, l = neigh.gridPosition
-            if self.matrix[l][c].lower() == self.JMIN[0]:
+            if self.matrix[l][c].lower() == player[0]:
                 ok = True
                 break
         if ok:
@@ -196,10 +197,9 @@ class Game:
         return False
 
     def estimateScore(self, depth):
+        # redPath = self.getRedShortestPath()
+        # bluePath = self.getBlueShortestPath()
         return 0
-
-    def getComputerShortestPath(self):
-        return []
 
     def getPlayerShortestPath(self):
         return []
@@ -243,7 +243,7 @@ class Game:
 
         if tile == self.getNearestTile(pygame.mouse.get_pos()):
             if not self.gameOver():
-                pygame.draw.circle(self.display, color=self.playerColours[self.JMIN],
+                pygame.draw.circle(self.display, color=self.playerColours[self.currentPlayer],
                                    center=tile.centerPoint(self.boardPosition), radius=10)
 
     def drawBoard(self):
@@ -257,7 +257,10 @@ class Game:
 
         self.drawBorder()
 
-        pygame.display.flip()
+        self.drawQuitButton()
+
+        if Game.running:
+            pygame.display.flip()
 
     def drawPath(self):
         path = self.solution
@@ -284,3 +287,15 @@ class Game:
             else:
                 corners = corners[fromPoint:toPoint]
             pygame.draw.lines(self.display, color=colour, points=corners, width=width, closed=False)
+
+    def drawQuitButton(self):
+        buttonWidth = 150
+        buttonHeight = 50
+        quitbtn = Button(display=self.display,
+                         top=20,
+                         left=self.screenSize[0] - buttonWidth - 20,
+                         w=buttonWidth,
+                         h=buttonHeight,
+                         text="QUIT",
+                         bgColor=(255, 20, 0))
+        quitbtn.draw()

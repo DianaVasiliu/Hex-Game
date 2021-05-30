@@ -9,6 +9,7 @@ algButtonWidth = 170
 playerButtonWidth = 100
 startButtonWidth = 110
 difficultyButtonWidth = 200
+gametypeButtonWidth = 300
 topMargin = 30
 
 
@@ -46,17 +47,26 @@ def homePage(game, display):
         ],
         selected=0
     )
-    # TODO:
-    # button group for the type of play: player vs player / player vs computer
+    gameType = ButtonGroup(
+        top=4*topMargin + 3*buttonHeight,
+        left=game.screenSize[0] / 2 - gametypeButtonWidth,
+        buttonList=[
+            Button(display=display, w=gametypeButtonWidth, h=buttonHeight,
+                   text="Player vs Player", value="pvp"),
+            Button(display=display, w=gametypeButtonWidth, h=buttonHeight,
+                   text="Player vs Computer", value="pvc")
+        ],
+        selected=1
+    )
     start = Button(display=display,
-                   top=4*topMargin + 3*buttonHeight,
+                   top=5*topMargin + 4*buttonHeight,
                    left=game.screenSize[0] / 2 - startButtonWidth / 2 + 35,
                    w=startButtonWidth,
                    h=buttonHeight,
                    text="START",
                    bgColor=(0, 179, 60))
     quitbtn = Button(display=display,
-                     top=5*topMargin + 4*buttonHeight,
+                     top=6*topMargin + 5*buttonHeight,
                      left=game.screenSize[0] / 2 - startButtonWidth / 2 + 35,
                      w=startButtonWidth,
                      h=buttonHeight,
@@ -65,6 +75,7 @@ def homePage(game, display):
     algorithm.draw()
     player.draw()
     difficulty.draw()
+    gameType.draw()
     start.draw()
     quitbtn.draw()
 
@@ -81,8 +92,10 @@ def homePage(game, display):
                 if not algorithm.selectByCoord(pos):
                     if not player.selectByCoord(pos):
                         if not difficulty.selectByCoord(pos):
-                            if start.selectByCoord(pos):
-                                return player.getValue(), algorithm.getValue(), difficulty.getValue()
+                            if not gameType.selectByCoord(pos):
+                                if start.selectByCoord(pos):
+                                    return player.getValue(), algorithm.getValue(), \
+                                           difficulty.getValue(), gameType.getValue()
         pygame.display.update()
 
 
@@ -95,3 +108,11 @@ def cornerPoint(radius, index, pos):
     theta = math.pi / 180 * deg
     x, y = pos
     return radius * math.cos(theta) + x, radius * math.sin(theta) + y
+
+
+def integer(number):
+    try:
+        int(number)
+        return True
+    except ValueError:
+        return False
