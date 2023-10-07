@@ -9,9 +9,11 @@ def handleEvents(events, game, state):
             pygame.quit()
         if event.type == pygame.MOUSEBUTTONDOWN:
             pos = pygame.mouse.get_pos()
+            # verificam daca am apasat pe butonul de quit
             if event.button == 1 and pos[0] >= 1100 and pos[1] <= 70:
                 Game.running = False
                 break
+            # mutarea jucatorului
             if event.button == 1 and game.isValidMove(state.currentPlayer):
                 x, y = game.makeMove(state.currentPlayer)
                 game.showMatrix()

@@ -54,7 +54,7 @@ def homePage(game, display):
             Button(display=display, w=gametypeButtonWidth, h=buttonHeight,
                    text="Player vs Player", value="pvp"),
             Button(display=display, w=gametypeButtonWidth, h=buttonHeight,
-                   text="Player vs Computer", value="pvc")
+                   text="Player vs Computer", value="pve")
         ],
         selected=1
     )

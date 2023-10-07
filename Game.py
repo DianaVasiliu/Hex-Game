@@ -47,6 +47,11 @@ class Game:
         self.text = 'Red\'s turn'
         self.solution = None
 
+        self.redPath = []
+        self.bluePath = []
+        self.foundRedPath = 0
+        self.foundBluePath = 0
+
     @classmethod
     def initialiseGame(cls, display, game):
         cls.display = display
@@ -83,16 +88,22 @@ class Game:
         self.display.blit(renderedText, rectangleText)
 
     def makeMove(self, player):
+        # luam cel mai apropiat tile de mouse
         tile = self.getNearestTile(pygame.mouse.get_pos())
+        # coloram tile-ul in culoarea player-ului
         tile.colour = self.playerColours[player]
 
+        # actualizam caracterul din matrice
         x, y = tile.gridPosition
         self.matrix[y][x] = player[0].upper()
         self.grid.visitedTiles[tile.gridPosition] = 1
         self.emptyTiles -= 1
 
+        # actualizam datele despre jucatorul curent
         otherPlayer = self.otherPlayer(player)
         self.text = otherPlayer.capitalize() + '\'s turn'
+
+        # verifican daca am ajuns la o solutie (daca a castigat vreun jucator)
         self.solution = self.findSolution()
 
         if self.solution is not None:
@@ -100,6 +111,7 @@ class Game:
         elif self.solution is None and self.emptyTiles == 0:
             self.text = 'Game over! It\'s a tie!'
 
+        # actualizam tile-urile din pozitii extreme
         if player == 'red':
             if Game.topTile is None:
                 Game.topTile = tile.gridPosition
@@ -125,6 +137,10 @@ class Game:
                 if tile.gridPosition[0] > Game.rightTile[0]:
                     Game.rightTile = tile.gridPosition
 
+        # print('top tile:', self.topTile)
+        # print('bottom tile:', self.bottomTile)
+        # print('left tile:', self.leftTile)
+        # print('right tile:', self.rightTile)
         return x, y
 
     def getNearestTile(self, pos):
@@ -132,10 +148,12 @@ class Game:
         minDist = sys.maxsize
 
         for tile in self.hexTiles():
+            # calculam distantele de la mouse la toate tile-urile
             distance = tile.distanceSq(pos, self.boardPosition)
             if distance < minDist:
                 minDist = distance
                 nearestTile = tile
+        # returnam cel mai apropiat tile
         return nearestTile
 
     def nextMoves(self, player):
@@ -144,20 +162,28 @@ class Game:
         allTiles = self.grid.tiles
         for i in range(self.NUM_ROWS):
             for j in range(self.NUM_COLS):
+                # creem o lista cu toate tile-urile ocupate de calculator
+                # cautam in matrice pozitiile pe care a mutat calculatorul
                 if self.matrix[i][j] == self.JMAX[0].lower():
                     computerTiles.append(allTiles[(j, i)])
 
         moves = []
         for computerTile in computerTiles:
+            # pentru fiecare tile ocupat de calculator, selectam vecinii
             neighbours = computerTile.neighbours
             for n in neighbours:
                 j, i = n.gridPosition
+                # pentru fiecare vecin, verificam sa fie liber
                 if self.matrix[i][j] == self.EMPTY:
+                    # copiem matricea starii curente
                     newMatrix = copy.deepcopy(self.matrix)
+                    # in noua matrice, pozitionam culoarea calculatorului
                     newMatrix[i][j] = player[0].upper()
+                    # creem o stare noua cu matricea nou formata
                     newGame = Game(newMatrix)
                     newGame.currentPlayer = self.otherPlayer(player)
                     newGame.text = newGame.currentPlayer.capitalize() + '\'s turn'
+                    # adaugam aceasta stare noua la lista de mutari
                     moves.append(newGame)
 
         # if the players can move anywhere on the table
@@ -183,10 +209,15 @@ class Game:
 
         # the player can only place a tile next to another tile
         allTiles = self.NUM_ROWS * self.NUM_COLS
+
+        # daca toate tile-urile sunt goale (sau una singura a fost ocupata)
         if self.emptyTiles in [allTiles, allTiles - 1]:
+            # returnam True daca piesa pe care vrem sa mutam e goala
+            # sau false altfel
             return self.matrix[tile.gridPosition[1]][tile.gridPosition[0]] == self.EMPTY
 
         ok = False
+        # verificam ca tile-ul pe care vrem sa mutam are macar un vecin colorat in culoarea player-ului
         for neigh in tile.neighbours:
             c, l = neigh.gridPosition
             if self.matrix[l][c].lower() == player[0]:
@@ -197,12 +228,79 @@ class Game:
         return False
 
     def estimateScore(self, depth):
-        # redPath = self.getRedShortestPath()
-        # bluePath = self.getBlueShortestPath()
-        return 0
+        # calculam cate mutari mai are de facut RED pana cand creeaza puntea sus-jos
+        # calculam cate mutari mai are de facut BLUE pana cand creeaza puntea stanga-dreapta
+        # estimarea scorului pentru calculator este scorPlayer - scorCalculator
 
-    def getPlayerShortestPath(self):
-        return []
+        # daca scorPlayer - scorCalculator < 0 => scorPlayer < scorCalculator
+        # => player-ul e mai aproape de WIN decat calculatorul
+
+        # daca scorPlayer - scorCalculator > 0 => scorPlayer > scorCalculator
+        # => calculatorul e mai aproape de WIN decat playerul
+
+        # daca scorPlayer - scorCalculator == 0 => scorPlayer == scorCalculator
+        # => player-ul si calculatorul sunt la fel de departe de win
+
+        self.foundRedPath = 0
+        self.foundBluePath = 0
+        self.redPath = []
+        self.bluePath = []
+        redPathLength = self.NUM_ROWS
+        bluePathLength = self.NUM_COLS
+        # if self.topTile:
+        #     self.getRedShortestPath(self.grid.tiles[self.topTile])
+        #     redPathLength = len(self.redPath)
+        # if self.leftTile:
+        #     self.getBlueShortestPath(self.grid.tiles[self.leftTile])
+        #     bluePathLength = len(self.bluePath)
+
+        # euristica: scor_player - scor_calculator
+        if Game.JMAX == 'red':
+            return bluePathLength - redPathLength
+        else:
+            return redPathLength - bluePathLength
+
+    def getRedShortestPath(self, currentTile):
+        # if we found both parts of the path, we stop
+        if self.foundRedPath == 2:
+            return
+
+        allTiles = self.grid.tiles
+
+        # finding the top path part
+        if self.topTile is not None:
+            # we get the neighbours and rearrange them so we get the top neighbours first
+            neighbours = allTiles[currentTile.gridPosition].neighbours
+            neighbours.reverse()
+            # we filter the neighbours so we have only the available ones
+            neighbours = list(filter(lambda tile: self.matrix[tile.gridPosition[1]][tile.gridPosition[0]] == '.',
+                                     neighbours))
+
+            for neigh in neighbours:
+                # if we have found the top path, we stop searching for the next neighbours
+                if self.foundRedPath != 0:
+                    break
+
+                # we check if the neighbour is valid (it is empty)
+                y, x = neigh.gridPosition[0], neigh.gridPosition[1]
+                if self.matrix[x][y] == Game.EMPTY:
+
+                    # print('appended neigh:', neigh)
+
+                    # we add the neighbour to the path
+                    self.redPath.append(neigh)
+                    # if this neighbour is on the first row, we found the path and we stop the search
+                    if neigh.gridPosition[1] == 0:
+                        self.foundRedPath += 1
+                        break
+                    # otherwise, we continue the recursive search into the neighbour
+                    self.getRedShortestPath(neigh)
+                    # self.redPath.remove(neigh)
+            # print(self.redPath)
+            # print()
+
+    # def getPlayerShortestPath(self):
+    #     return []
 
     def gameOver(self):
         if self.solution is None:
@@ -210,6 +308,7 @@ class Game:
         return self.solution is not None
 
     def findSolution(self):
+        # cautam path-ul sus-jos incepand de la cea mai de sus piesa rosie (de pe primul rand)
         for tile in self.grid.topRow():
             if tile.colour == self.playerColours['red']:
                 path = self.grid.findPath(
@@ -221,6 +320,7 @@ class Game:
                 if path is not None:
                     return path
 
+        # cautam path-ul stanga-dreapta incepand de la cea mai din stanga piesa albastra (de pe prima coloana)
         for tile in self.grid.leftColumn():
             if tile.colour == self.playerColours['blue']:
                 path = self.grid.findPath(
@@ -240,6 +340,10 @@ class Game:
         pygame.draw.polygon(self.display, tile.colour, corners)
         pygame.draw.polygon(self.display, (50, 50, 50), corners, 5)
         pygame.draw.polygon(self.display, (255, 255, 255), corners, 3)
+
+        # text = str(tile.gridPosition)
+        # self.display.blit(pygame.font.SysFont('Arial', 15)
+        #                   .render(text, True, (255, 255, 255)), (corners[3], corners[4]))
 
         if tile == self.getNearestTile(pygame.mouse.get_pos()):
             if not self.gameOver():

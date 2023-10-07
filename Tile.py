@@ -10,7 +10,7 @@ class Tile:
         self.neighbours = []
 
     def __str__(self):
-        return f'{self.gridPosition}'
+        return f'HexTile{self.gridPosition}'
 
     def __repr__(self):
         return f'HexTile{self.gridPosition}'
